@@ -1,0 +1,131 @@
+【项目背景与目标】
+你现在是一位资深的 AI 全栈架构师。我们需要从零开始开发一个类似于 Claude Code 和 OpenClaw 的通用 AI Agent 系统。该系统具备网页端交互能力，能够实时展示 Agent 的思考与执行过程，具备长短期记忆，并支持动态的工具和技能扩展。
+
+【核心技术栈】
+
+后端 (Backend): Python 3.10+ + FastAPI (提供高并发与 WebSocket/SSE 流式传输) + LangChain/LangGraph (Agent 编排引擎) + SQLAlchemy (关系型数据库 ORM).
+
+前端 (Frontend): React (Next.js) 或 Vue 3 (Nuxt.js) + Tailwind CSS + WebSocket/SSE 客户端.
+
+数据库 (Database): * 关系型: PostgreSQL / MySQL (用于存储用户、配置、技能元数据).
+
+向量型: Milvus / Qdrant / ChromaDB (用于 Agent 的长期记忆和 RAG).
+
+【核心功能需求模块】
+
+AI Agent 核心引擎 (Agent Core):
+
+流式输出 (Streaming): 必须支持实时返回 Agent 的状态，包括：思考过程 (Thought)、工具调用 (Action)、执行日志 (Logs)、最终回答 (Observation/Response)。
+
+工具与技能 (Tools & Skills):
+
+内置工具：Bash 执行器 (需沙箱/Docker隔离)、Python REPL、网页搜索。
+
+技能系统 (Skill System)：支持用户通过 Admin 页面上传（如 Python 脚本或 JSON 配置）、安装、卸载自定义技能。
+
+MCP 支持 (Model Context Protocol): 支持连接符合 MCP 标准的服务器，允许 Agent 动态读取外部资源和调用外部工具。
+
+记忆系统 (Memory): 结合 LangChain 的 BaseChatMemory 与 VectorDB，实现会话级短期记忆和向量化长期记忆（实体提取与历史经验检索）。
+
+前端交互界面 (User Interface):
+
+用户侧 (Client): 类似 Claude/ChatGPT 的聊天界面。消息气泡需要支持 Markdown。在回复过程中，需有折叠/展开的 UI 来实时展示“思考流”和“终端执行流”。
+
+管理后台 (Admin Dashboard):
+
+模型管理 (Model): 配置多模型 API Key，设置默认模型。
+
+技能管理 (Skill): 列表展示、上传、启用/禁用、卸载。
+
+MCP 管理 (MCP): 添加/移除 MCP 服务器连接 (SSE/Stdio)。
+
+用户管理 (User): 基础的 CRUD。
+
+Token 消耗看板 (Token usage).
+
+【系统设计规范要求】
+
+所有前后端交互 API 必须符合 RESTful 标准或 WebSocket 规范，并优先生成 OpenAPI Spec。
+
+代码结构需高内聚低耦合，LangChain 的 Tool 封装必须标准化，以便于动态加载。
+
+
+步骤 1：生成 OpenSpec (接口契约)
+
+指令内容：
+
+作为架构师，请按照 OpenAPI 3.0 规范为我们的 AI Agent MVP 编写一份 api_spec.yaml。
+
+MVP 需求范围：
+
+POST /api/v1/chat/stream: 接收用户消息，返回 Server-Sent Events (SSE) 流。
+
+SSE 数据流必须包含三种类型：
+
+thought: Agent 的思考过程。
+
+call: 工具调用的名称和参数。
+
+answer: 最终生成的文本内容。
+
+GET /api/v1/health: 基础健康检查。
+
+请确保 YAML 定义清晰，尤其是 SSE 的 data 结构，以便前后端严格对齐。
+
+步骤 2：后端基础骨架 (FastAPI + LangChain)
+
+指令内容：
+
+请阅读 api_spec.yaml，使用 Python 3.10+ 和 FastAPI 实现后端基础代码。
+
+技术要求：
+
+使用 langchain 和 langchain-openai 创建一个简单的 ReAct Agent。
+
+实现一个自定义的 AsyncCallbackHandler，捕获 on_llm_thought (或类似逻辑)、on_tool_start 和 on_llm_new_token 事件。
+
+将这些事件封装成符合规范的 SSE 格式返回。
+
+先内置一个简单的工具（例如 get_weather 或 calculator）用于演示工具调用过程。
+
+暂时使用内存存储会话历史。
+
+请输出完整的 main.py 和必要的依赖配置文件 requirements.txt。
+
+步骤 3：前端交互骨架 (React + Tailwind)
+
+指令内容：
+
+请根据 api_spec.yaml 定义的 SSE 结构，使用 React (Next.js) 和 Tailwind CSS 编写聊天界面。
+
+功能要求：
+
+聊天窗口布局：左侧消息历史，底部输入框。
+
+消息流处理：使用 fetch 或 EventSource 监听 /api/v1/chat/stream。
+
+实时展示逻辑：
+
+当收到 thought 类型时，在界面显示一个“思考中...”的半透明卡片。
+
+当收到 call 类型时，显示一个“正在调用工具 [名称]”的标签。
+
+当收到 answer 类型时，使用打字机效果实时渲染 Markdown 文本。
+
+确保界面响应式，风格类似 Claude.ai。
+
+请输出单个文件的 ChatApp.tsx 或完整的组件代码。
+
+步骤 4：联调与校验
+
+指令内容：
+
+现在前后端代码已生成。请你扮演 QA 工程师，检查 main.py 的 SSE 输出格式是否与 api_spec.yaml 完全一致。
+
+特别检查：
+
+跨域 (CORS) 配置是否已在 FastAPI 中开启，以允许前端访问。
+
+异步生成器 (Async Generator) 是否正确处理了连接中断的情况。
+
+如果一致，请提供一个 curl 命令用于测试接口。
