@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: AI Agent MVP API
+  description: |
+    API for AI Agent system with SSE streaming support.
+
+    ## SSE Event Types
+
+    The `/api/v1/chat/stream` endpoint returns Server-Sent Events with the following types:
+
+    - **thought**: Agent's thinking/reasoning process
+      ```json
+      {"type": "thought", "content": "Thinking about the problem..."}
+      ```
+
+    - **call**: Tool invocation
+      ```json
+      {"type": "call", "tool": "calculator", "args": {"expression": "2+2"}}
+      ```
+
+    - **answer**: Final text response
+      ```json
+      {"type": "answer", "content": "The answer is 4."}
+      ```
+
+    - **error**: Error occurred
+      ```json
+      {"type": "error", "content": "Error message"}
+      ```
+
+  version: 0.1.0
+  contact: {}
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /api/v1/health:
+    get:
+      summary: Health check
+      description: Returns the health status of the API
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+              example:
+                status: ok
+
+  /api/v1/chat/stream:
+    post:
+      summary: Stream chat response
+      description: |
+        Receives a user message and returns an SSE stream of agent events.
+
+        The stream contains thought, call, and answer events as the agent
+        processes the request and generates a response.
+      operationId: chatStream
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: The user's message
+                  example: "What's the weather in Beijing?"
+                session_id:
+                  type: string
+                  description: Optional session ID for conversation continuity
+                  example: "abc123"
+      responses:
+        '200':
+          description: SSE stream of events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                format: binary
+              examples:
+                thoughtEvent:
+                  summary: Thought event
+                  value: |
+                    event: message
+                    data: {"type": "thought", "content": "The user is asking about weather in Beijing..."}
+
+                callEvent:
+                  summary: Tool call event
+                  value: |
+                    event: message
+                    data: {"type": "call", "tool": "get_weather", "args": {"city": "Beijing"}}
+
+                answerEvent:
+                  summary: Final answer event
+                  value: |
+                    event: message
+                    data: {"type": "answer", "content": "The weather in Beijing is Sunny, 22°C."}
+
+  /api/v1/skills:
+    get:
+      summary: List skills
+      description: Returns a list of all registered skills/tools
+      operationId: listSkills
+      tags:
+        - Skills
+      responses:
+        '200':
+          description: List of skills
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Tool name
+                        description:
+                          type: string
+                          description: Tool description
+              example:
+                skills:
+                  - name: calculator
+                    description: Evaluates mathematical expressions
+                  - name: get_weather
+                    description: Get the current weather for a city
+
+  /api/v1/skills/install:
+    post:
+      summary: Install skill
+      description: Install a new skill from JSON configuration
+      operationId: installSkill
+      tags:
+        - Skills
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                tools:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        '200':
+          description: Skill installed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  name:
+                    type: string
+
+  /api/v1/skills/{name}:
+    delete:
+      summary: Uninstall skill
+      description: Uninstall a skill by name
+      operationId: uninstallSkill
+      tags:
+        - Skills
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the skill to uninstall
+      responses:
+        '200':
+          description: Skill uninstalled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  name:
+                    type: string
+
+components:
+  schemas: {}
+  securitySchemes: {}

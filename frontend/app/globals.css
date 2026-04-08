@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.thought-card {
+  @apply bg-gray-800/50 border border-gray-700 rounded-lg p-3 mb-2 text-sm;
+}
+
+.call-tag {
+  @apply bg-blue-900/50 border border-blue-600 rounded px-2 py-1 text-xs inline-block mr-2;
+}
+
+.message-bubble {
+  @apply rounded-lg p-4 max-w-2xl;
+}
+
+.user-message {
+  @apply bg-primary/20 border border-primary/30;
+}
+
+.assistant-message {
+  @apply bg-surface border border-border;
+}
+
+.typing-cursor::after {
+  content: '▊';
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}

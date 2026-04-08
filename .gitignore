@@ -1,0 +1,42 @@
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.log
+backend/server.log
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python
+*.pyc
+*.pyo
+__pycache__/
+*.so
+*.egg
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Playwright
+.playwright-mcp/
+
+# Testing
+*.tmp
+*.temp
+.claude/
